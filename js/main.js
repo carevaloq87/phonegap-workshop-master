@@ -1,5 +1,19 @@
 var app = {
 
+    route: function() {
+        var hash = window.location.hash;
+        if (!hash) {
+            $('body').html(new HomeView(this.store).render().el);
+            return;
+        }
+        var match = hash.match(app.detailsURL);
+        if (match) {
+            this.store.findById(Number(match[1]), function(employee) {
+                $('body').html(new EmployeeView(employee).render().el);
+            });
+        }
+    },
+
     registerEvents: function() {
         var self = this;
         // Check of browser supports touch events...
@@ -20,7 +34,9 @@ var app = {
                 $(event.target).removeClass('tappable-active');
             });
         }
-        console.log("register events");
+        
+        $(window).on('hashchange', $.proxy(this.route, this));
+
     },
 
     showAlert: function (message, title) {
@@ -33,10 +49,11 @@ var app = {
 
     initialize: function() {
         var self = this;
-        this.store = new MemoryStore(function() {
-            $('body').html(new HomeView(self.store).render().el);
-        });
+        this.detailsURL = /^#employees\/(\d{1,})/;
         this.registerEvents();
+        this.store = new MemoryStore(function() {
+            self.route();
+        });
     }
 
 };
